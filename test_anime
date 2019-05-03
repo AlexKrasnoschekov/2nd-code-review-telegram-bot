@@ -1,0 +1,180 @@
+import telebot
+import sqlite3
+
+bot = telebot.TeleBot('765452153:AAEUEUdE35lx3fw6FRhGDs0EilgMtJnxuvQ')
+bot.remove_webhook()
+
+
+def create_best_table():
+    con = sqlite3.connect('testsql.db')
+    cur = con.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS best_data_file(titles TEXT)')
+    cur.execute('INSERT INTO best_data_file VALUES("Тетрадь смерти https://shikimori.org/animes/1535-death-note\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Код Гиасс https://shikimori.org/animes/1575-code-geass\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Психопаспорт https://shikimori.org/animes/z13601-psycho-pass\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Врата Штейна https://shikimori.org/animes/9253-steins-gate\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Убийцы Акаме! https://shikimori.org/animes/22199-akame-ga-kill\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Стальной алхимик '
+                'https://shikimori.org/animes/121-fullmetal-alchemist\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Вторжение гигантов '
+                'https://shikimori.org/animes/16498-shingeki-no-kyojin\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Дюрарара!! https://shikimori.org/animes/6746-durarara\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Твоя апрельская ложь '
+                'https://shikimori.org/animes/23273-shigatsu-wa-kimi-no-uso\n")')
+    cur.execute('INSERT INTO best_data_file VALUES("Ковбой Бибоп https://shikimori.org/animes/1-cowboy-bebop\n")')
+    con.commit()
+    cur.close()
+    con.close()
+
+
+def create_detective_table():
+    con = sqlite3.connect('detective.db')
+    cur = con.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS detective_file(det_titles TEXT)')
+    cur.execute('INSERT INTO detective_file VALUES("Тетрадь смерти https://shikimori.org/animes/1535-death-note\n")')
+    cur.execute('INSERT INTO detective_file VALUES("Дюрарара!! https://shikimori.org/animes/6746-durarara\n")')
+    cur.execute('INSERT INTO detective_file VALUES("91 День https://shikimori.org/animes/32998-91-days\n")')
+    cur.execute('INSERT INTO detective_file VALUES("Исчезновение Харухи Судзумии'
+                ' https://shikimori.org/animes/7311-suzumiya-haruhi-no-shoushitsu\n")')
+    cur.execute('INSERT INTO detective_file VALUES("Переворотный суд '
+                'https://shikimori.org/animes/31630-gyakuten-saiban-sono-shinjitsu-igi-ari\n")')
+    cur.execute('INSERT INTO detective_file VALUES("Психопаспорт https://shikimori.org/animes/z13601-psycho-pass\n")')
+    con.commit()
+    cur.close()
+    con.close()
+
+
+def create_action_table():
+    con = sqlite3.connect('action.db')
+    cur = con.cursor()
+    cur.execute('CREATE TABLE IF NOT EXISTS action_file(act_titles TEXT)')
+    cur.execute('INSERT INTO action_file VALUES("Убийцы Акаме! https://shikimori.org/animes/22199-akame-ga-kill\n")')
+    cur.execute('INSERT INTO action_file VALUES("Вторжение гигантов '
+                'https://shikimori.org/animes/16498-shingeki-no-kyojin\n")')
+    cur.execute('INSERT INTO action_file VALUES("Дороро https://shikimori.org/animes/37520-dororo\n")')
+    cur.execute('INSERT INTO action_file VALUES("Монстр https://shikimori.org/animes/19-monster\n")')
+    cur.execute('INSERT INTO action_file VALUES("В поисках божественного рецепта'
+                ' https://shikimori.org/animes/28171-shokugeki-no-souma\n")')
+    cur.execute('INSERT INTO action_file VALUES("Наруто https://shikimori.org/animes/1735-naruto-shippuuden\n")')
+    con.commit()
+    cur.close()
+    con.close()
+
+
+create_best_table()
+create_detective_table()
+create_action_table()
+
+
+common = "\0"
+tmp_detective = common
+tmp_action = tmp_detective
+
+
+def read_single_in_best_table(data_base, table, column_name):
+    global common
+    con = sqlite3.connect(data_base)
+    cur = con.cursor()
+    query = 'SELECT '+column_name+' FROM '+table
+    cur.execute(query)
+    data = cur.fetchall()
+    for line in data:
+        common += str(line[0])
+    cur.close()
+    con.close()
+
+
+def delete_table(data_base, table):
+    con = sqlite3.connect(data_base)
+    cur = con.cursor()
+    query = 'DROP TABLE IF EXISTS '+table
+    cur.execute(query)
+    cur.close()
+    con.close()
+
+
+def read_single_in_act_table(data_base, table, column_name):
+    global tmp_action
+    con = sqlite3.connect(data_base)
+    cur = con.cursor()
+    query = 'SELECT '+column_name+' FROM '+table
+    cur.execute(query)
+    data = cur.fetchall()
+    for line in data:
+        tmp_action += str(line[0])
+    cur.close()
+    con.close()
+
+
+def check_inclusion(str):
+    if str == "/list+action" or str == "/action+list" \
+            or str == "/detective+action" or str == "/action+detective" \
+            or str == "/detective+list" or str == "/list+detective":
+        return True
+    else:
+        return False
+
+
+def read_single_in_det_table(data_base, table, column_name):
+    global tmp_detective
+    con = sqlite3.connect(data_base)
+    cur = con.cursor()
+    query = 'SELECT '+column_name+' FROM '+table
+    cur.execute(query)
+    data = cur.fetchall()
+    for line in data:
+        tmp_detective += str(line[0])
+    cur.close()
+    con.close()
+
+
+@bot.message_handler(content_types=['text', 'document', 'audio'])
+def get_text_message(message):
+    if message.text == "Привет" or message.text == "/start":
+        bot.send_message(message.from_user.id, "Бот, помогающий выбрать стоящее аниме." +
+                         " Для просмотра доступных опций используйте команду  /help.")
+    elif message.text == "/help":
+        bot.send_message(message.from_user.id, "Доступные команды:" + '\n' +
+                         "/list — " + "расскажет, какие тайтлы считаются лучшими в аниме сообществе;" + '\n' +
+                         "/tags — " + "предоставит вам возможность выбора категорий, " +
+                         "которые вам нравятся и по ним найти подходящий вариант;" + '\n'
+                         )
+    elif message.text == "/list":
+        global common
+        data_base = 'testsql.db'
+        table = 'best_data_file'
+        read_single_in_best_table(data_base, table, 'titles')
+        bot.send_message(message.from_user.id, "Десять шедевров из мира японской анимации : " + '\n' +
+                         common)
+        delete_table('testsql.db', 'best_data_file')
+        create_best_table()
+        common = "\n"
+    elif message.text == "/tags":
+        bot.send_message(message.from_user.id, "Доступные категории: " + '\n' +
+                         "/action" + '\n' + "/detective" + '\n')
+    elif message.text == "/detective":
+        global tmp_detective
+        data_base = 'detective.db'
+        table = 'detective_file'
+        read_single_in_det_table(data_base, table, 'det_titles')
+        bot.send_message(message.from_user.id, "Скорее всего,что-нибудь из этого понравится: " + '\n' +
+                         tmp_detective)
+        delete_table('detective.db', 'detective_file')
+        create_detective_table()
+        tmp_detective = "\n"
+    elif message.text == "/action":
+        global tmp_action
+        data_base = 'action.db'
+        table = 'action_file'
+        read_single_in_act_table(data_base, table, 'act_titles')
+        bot.send_message(message.from_user.id, "Скорее всего,что-нибудь из этого понравится: " + '\n' +
+                         tmp_action)
+        delete_table('action.db', 'action_file')
+        create_action_table()
+        tmp_action = "\n"
+    else:
+        bot.send_message(message.from_user.id, "Я не понимаю такой команды. " +
+                                               "Попробуйте использовать /help или написать *Привет*.")
+
+
+bot.polling(none_stop=True, interval=0)
